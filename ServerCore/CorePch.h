@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 
@@ -6,3 +6,5 @@
 #include <MSWSock.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
+
+#include "CoreGlobal.h"

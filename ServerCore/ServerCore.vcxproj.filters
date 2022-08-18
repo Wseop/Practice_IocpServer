@@ -4,6 +4,9 @@
     <Filter Include="Main">
       <UniqueIdentifier>{205e673c-c560-44b4-ba5b-514a8f86709c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{42ccfe04-c514-476d-a542-f03b01682092}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -12,12 +15,24 @@
     <ClCompile Include="CorePch.cpp">
       <Filter>Main</Filter>
     </ClCompile>
+    <ClCompile Include="ThreadManager.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreGlobal.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="CorePch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadManager.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreGlobal.h">
       <Filter>Main</Filter>
     </ClInclude>
   </ItemGroup>
