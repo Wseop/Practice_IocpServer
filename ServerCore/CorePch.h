@@ -1,6 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include <iostream>
+#include <cassert>
 
 #include <WinSock2.h>
 #include <MSWSock.h>

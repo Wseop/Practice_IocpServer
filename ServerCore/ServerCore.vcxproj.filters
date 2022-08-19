@@ -7,6 +7,9 @@
     <Filter Include="Thread">
       <UniqueIdentifier>{42ccfe04-c514-476d-a542-f03b01682092}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{9ee1317c-70f4-424e-945b-46bed076e206}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -21,6 +24,9 @@
     <ClCompile Include="CoreGlobal.cpp">
       <Filter>Main</Filter>
     </ClCompile>
+    <ClCompile Include="SocketUtils.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -34,6 +40,9 @@
     </ClInclude>
     <ClInclude Include="CoreGlobal.h">
       <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketUtils.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

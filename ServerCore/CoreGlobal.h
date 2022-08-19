@@ -1,3 +1,3 @@
-﻿#pragma once
+#pragma once
 
 extern class ThreadManager* GThreadManager;
