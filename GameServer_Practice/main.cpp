@@ -8,7 +8,6 @@ using namespace std;
 
 int main(void)
 {
-	// IocpCore, IocpObject, IocpEvent - Accept Test
 	shared_ptr<Listener> listener = make_shared<Listener>();
 	listener->StartAccept();
 

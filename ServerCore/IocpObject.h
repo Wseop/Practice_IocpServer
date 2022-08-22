@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include <vector>
-class IocpEvent;
-class AcceptEvent;
+#include "RecvBuffer.h"
+#include "IocpEvent.h"
 
 class IocpObject : public std::enable_shared_from_this<IocpObject>
 {
@@ -36,6 +36,8 @@ private:
 
 class Session : public IocpObject
 {
+	const int BUFFER_SIZE = 0x10000;    // 64KB
+
 public:
 	Session();
 	~Session();
@@ -45,20 +47,24 @@ public:
 	SOCKET GetSocket() { return _clientSocket; }
 	void SetAddr(SOCKADDR_IN sockAddr) { _sockAddr = sockAddr; }
 	SOCKADDR_IN GetAddr() { return _sockAddr; }
+	RecvBuffer& GetRecvBuffer() { return _recvBuffer; }
 
 	void StartConnect();
 	void RegisterConnect();
 	void ProcessConnect();
 
 	void StartSend(class SendBuffer* sendBuffer);
-	void RegisterSend(class SendEvent* sendEvent);
-	void ProcessSend(class SendEvent* sendEvent, DWORD bytesTransferred);
+	void RegisterSend(SendEvent* sendEvent);
+	void ProcessSend(SendEvent* sendEvent, DWORD bytesTransferred);
 
-public:
-	wchar_t _recvBuffer[1000];
+	void RegisterRecv();
+	void ProcessRecv(DWORD bytesTransferred);
+	void OnRecv(DWORD bytesTransferred);
 
 private:
 	SOCKET _clientSocket;
 	SOCKADDR_IN _sockAddr;
-	class ConnectEvent* _connectEvent;
+	ConnectEvent* _connectEvent;
+	RecvEvent _recvEvent;
+	RecvBuffer _recvBuffer;
 };

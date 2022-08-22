@@ -4,6 +4,7 @@
 #include "IocpCore.h"
 #include "IocpObject.h"
 #include "SendBuffer.h"
+#include "TestPacket.h"
 #include <vector>
 
 using namespace std;
@@ -33,18 +34,17 @@ int main(void)
 	
 	}
 
-	// 각 session마다 4바이트씩 크기가 증가하는 vector를 서버로 전달
+	static int a = 1;
 	GThreadManager->CreateThread([=]()
 		{
-			vector<int> data;
-
 			while (true)
 			{
-				data.push_back(1);
+				TestPacket packet(a, a + 1, a + 2);
+				a++;
 
 				for (shared_ptr<Session> session : sessions)
 				{
-					SendBuffer* sendBuffer = new SendBuffer(reinterpret_cast<BYTE*>(data.data()), data.size() * sizeof(int));
+					SendBuffer* sendBuffer = new SendBuffer(reinterpret_cast<BYTE*>(&packet), sizeof(TestPacket));
 					session->StartSend(sendBuffer);
 				}
 

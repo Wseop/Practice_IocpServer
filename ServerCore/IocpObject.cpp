@@ -4,6 +4,8 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 #include "SendBuffer.h"
+#include "TestPacket.h"
+#include <vector>
 
 using namespace std;
 
@@ -56,7 +58,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 	assert(GIocpCore->Register(session->GetSocket()));
 
 	DWORD bytesTransferred = 0;
-	if (false == SocketUtils::AcceptEx(_listenSocket, session->GetSocket(), session->_recvBuffer, 
+	if (false == SocketUtils::AcceptEx(_listenSocket, session->GetSocket(), session->GetRecvBuffer().WritePos(),
 		0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytesTransferred, 
 		static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
@@ -91,19 +93,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 
 	session->SetAddr(clientAddr);
 	wcout << L"Client Connected." << endl;
-
-	// TODO. RegisterRecv, ProcessRecv
-	RecvEvent* recvEvent = new RecvEvent();
-	recvEvent->Init();
-	recvEvent->SetOwner(session);
-
-	WSABUF wsaBuf;
-	wsaBuf.buf = reinterpret_cast<char*>(&session->_recvBuffer[0]);
-	wsaBuf.len = 1000;
-	DWORD dataTransferred = 0;
-	DWORD flags = 0;
-	WSARecv(session->GetSocket(), &wsaBuf, 1, &dataTransferred, &flags, recvEvent, nullptr);
-	// 
+	session->RegisterRecv();
 
 	RegisterAccept(acceptEvent);
 }
@@ -114,7 +104,7 @@ void Listener::Dispatch(IocpEvent* iocpEvent, DWORD bytesTransferred)
 	ProcessAccept(static_cast<AcceptEvent*>(iocpEvent));
 }
 
-Session::Session()
+Session::Session() : _recvBuffer(BUFFER_SIZE)
 {
 	_clientSocket = SocketUtils::CreateSocket();
 	assert(_clientSocket != INVALID_SOCKET);
@@ -139,6 +129,7 @@ void Session::Dispatch(IocpEvent* iocpEvent, DWORD bytesTransferred)
 		ProcessSend(static_cast<SendEvent*>(iocpEvent), bytesTransferred);
 		break;
 	case EventType::Recv:
+		ProcessRecv(bytesTransferred);
 		break;
 	}
 }
@@ -225,4 +216,60 @@ void Session::ProcessSend(SendEvent* sendEvent, DWORD bytesTransferred)
 
 	sendEvent->SetOwner(nullptr);
 	delete sendEvent;
+}
+
+void Session::RegisterRecv()
+{
+	_recvEvent.Init();
+	_recvEvent.SetOwner(shared_from_this());
+
+	WSABUF wsaBuf;
+	wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer.WritePos());
+	wsaBuf.len = _recvBuffer.FreeSize();
+	DWORD bytesTransferred = 0;
+	DWORD flags = 0;
+	if (SOCKET_ERROR == WSARecv(_clientSocket, &wsaBuf, 1, &bytesTransferred, &flags, &_recvEvent, nullptr))
+	{
+		int errorCode = WSAGetLastError();
+		if (errorCode != WSA_IO_PENDING)
+		{
+			wcout << L"WSARecv Error : " << errorCode << endl;
+			_recvEvent.SetOwner(nullptr);
+			RegisterRecv();
+		}
+	}
+}
+
+void Session::ProcessRecv(DWORD bytesTransferred)
+{
+	_recvEvent.SetOwner(nullptr);
+
+	if (bytesTransferred == 0)
+	{
+		wcout << L"Disconnected." << endl;
+		return;
+	}
+	if (_recvBuffer.OnWrite(bytesTransferred) == false)
+	{
+		wcout << L"OnWrite Error" << endl;
+		return;
+	}
+
+	OnRecv(bytesTransferred);    // TODO. Session을 상속받아 사용하는 측에서 원하는 동작으로 구현할 수 있도록 virtual로 구현하기
+	_recvBuffer.Clean();
+
+	RegisterRecv();
+}
+
+void Session::OnRecv(DWORD bytesTransferred)
+{
+	TestPacket* testPacket = reinterpret_cast<TestPacket*>(_recvBuffer.ReadPos());
+	
+	wcout << L"Packet Data : " << testPacket->_a << ", " << testPacket->_b << ", " << testPacket->_c << endl;
+
+	if (_recvBuffer.OnRead(bytesTransferred) == false)
+	{
+		wcout << L"OnRead Error" << endl;
+		return;
+	}
 }
