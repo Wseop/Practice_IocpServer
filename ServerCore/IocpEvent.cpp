@@ -18,3 +18,12 @@ void IocpEvent::Init()
 	OVERLAPPED::Offset = 0;
 	OVERLAPPED::OffsetHigh = 0;
 }
+
+SendEvent::~SendEvent()
+{
+	if (_sendBuffer != nullptr)
+	{
+		delete _sendBuffer;
+		_sendBuffer = nullptr;
+	}
+}

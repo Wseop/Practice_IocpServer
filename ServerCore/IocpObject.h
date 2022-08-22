@@ -3,7 +3,6 @@
 #include <vector>
 class IocpEvent;
 class AcceptEvent;
-class ConnectEvent;
 
 class IocpObject : public std::enable_shared_from_this<IocpObject>
 {
@@ -51,11 +50,15 @@ public:
 	void RegisterConnect();
 	void ProcessConnect();
 
+	void StartSend(class SendBuffer* sendBuffer);
+	void RegisterSend(class SendEvent* sendEvent);
+	void ProcessSend(class SendEvent* sendEvent, DWORD bytesTransferred);
+
 public:
 	wchar_t _recvBuffer[1000];
 
 private:
 	SOCKET _clientSocket;
 	SOCKADDR_IN _sockAddr;
-	ConnectEvent* _connectEvent;
+	class ConnectEvent* _connectEvent;
 };

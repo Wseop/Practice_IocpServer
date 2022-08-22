@@ -3,6 +3,7 @@
 #include "SocketUtils.h"
 #include "IocpCore.h"
 #include "IocpEvent.h"
+#include "SendBuffer.h"
 
 using namespace std;
 
@@ -91,6 +92,19 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 	session->SetAddr(clientAddr);
 	wcout << L"Client Connected." << endl;
 
+	// TODO. RegisterRecv, ProcessRecv
+	RecvEvent* recvEvent = new RecvEvent();
+	recvEvent->Init();
+	recvEvent->SetOwner(session);
+
+	WSABUF wsaBuf;
+	wsaBuf.buf = reinterpret_cast<char*>(&session->_recvBuffer[0]);
+	wsaBuf.len = 1000;
+	DWORD dataTransferred = 0;
+	DWORD flags = 0;
+	WSARecv(session->GetSocket(), &wsaBuf, 1, &dataTransferred, &flags, recvEvent, nullptr);
+	// 
+
 	RegisterAccept(acceptEvent);
 }
 
@@ -122,6 +136,7 @@ void Session::Dispatch(IocpEvent* iocpEvent, DWORD bytesTransferred)
 	case EventType::Disconnect:
 		break;
 	case EventType::Send:
+		ProcessSend(static_cast<SendEvent*>(iocpEvent), bytesTransferred);
 		break;
 	case EventType::Recv:
 		break;
@@ -162,4 +177,52 @@ void Session::ProcessConnect()
 	delete _connectEvent;
 
 	wcout << L"Connected to Server." << endl;
+}
+
+// SendEvent 생성 및 초기화
+void Session::StartSend(SendBuffer* sendBuffer)
+{
+	SendEvent* sendEvent = new SendEvent();
+	sendEvent->Init();
+	sendEvent->SetOwner(shared_from_this());
+	sendEvent->SetSendBuffer(sendBuffer);
+
+	RegisterSend(sendEvent);
+}
+
+// WSASend 호출
+void Session::RegisterSend(SendEvent* sendEvent)
+{
+	WSABUF wsaBuf;
+	wsaBuf.buf = reinterpret_cast<char*>(sendEvent->GetSendBuffer()->GetBuffer());
+	wsaBuf.len = static_cast<ULONG>(sendEvent->GetSendBuffer()->WriteSize());
+
+	DWORD bytesTransferred = 0;
+	if (SOCKET_ERROR == WSASend(_clientSocket, &wsaBuf, 1, &bytesTransferred, 0, static_cast<LPOVERLAPPED>(sendEvent), nullptr))
+	{
+		int errorCode = WSAGetLastError();
+		if (errorCode != WSA_IO_PENDING)
+		{
+			wcout << L"WSASend Error : " << errorCode << endl;
+			sendEvent->SetOwner(nullptr);
+			delete sendEvent;
+		}
+	}
+}
+
+// SendEvent 후처리 (메모리 해제 등)
+void Session::ProcessSend(SendEvent* sendEvent, DWORD bytesTransferred)
+{
+	if (bytesTransferred == 0)
+	{
+		wcout << L"Disconnected." << endl;
+	}
+	else
+	{
+		wcout << L"Data Send : " << bytesTransferred << L"bytes" << endl;
+		wcout << L"SendBuffer Size : " << sendEvent->GetSendBuffer()->WriteSize() << endl;
+	}
+
+	sendEvent->SetOwner(nullptr);
+	delete sendEvent;
 }

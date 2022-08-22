@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "SendBuffer.h"
+
 class IocpObject;
 class Session;
 
@@ -55,7 +57,14 @@ private:
 class SendEvent : public IocpEvent
 {
 public:
-	SendEvent() : IocpEvent(EventType::Send) {}
+	SendEvent() : IocpEvent(EventType::Send), _sendBuffer(nullptr) {}
+	~SendEvent();
+
+	void SetSendBuffer(class SendBuffer* sendBuffer) { _sendBuffer = sendBuffer; }
+	SendBuffer* GetSendBuffer() { return _sendBuffer; }
+
+private:
+	class SendBuffer* _sendBuffer;
 };
 
 class RecvEvent : public IocpEvent
