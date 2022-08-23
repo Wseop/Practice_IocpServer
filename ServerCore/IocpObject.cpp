@@ -4,8 +4,11 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 #include "SendBuffer.h"
-#include "TestPacket.h"
+#include "PacketManager.h"
+#include "PacketHeader.h"
+#include "PacketBody.h"
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -255,7 +258,7 @@ void Session::ProcessRecv(DWORD bytesTransferred)
 		return;
 	}
 
-	OnRecv(bytesTransferred);    // TODO. Session을 상속받아 사용하는 측에서 원하는 동작으로 구현할 수 있도록 virtual로 구현하기
+	OnRecv(bytesTransferred);
 	_recvBuffer.Clean();
 
 	RegisterRecv();
@@ -263,9 +266,22 @@ void Session::ProcessRecv(DWORD bytesTransferred)
 
 void Session::OnRecv(DWORD bytesTransferred)
 {
-	TestPacket* testPacket = reinterpret_cast<TestPacket*>(_recvBuffer.ReadPos());
-	
-	wcout << L"Packet Data : " << testPacket->_a << ", " << testPacket->_b << ", " << testPacket->_c << endl;
+	BYTE* data = _recvBuffer.ReadPos();
+	PacketHeader* header = PacketManager::DetachHeader(&data, bytesTransferred);
+	if (header != nullptr)
+	{
+		PacketType type = header->GetType();
+		if (type == PacketType::Info)
+		{
+			Info* info = reinterpret_cast<Info*>(data);
+			info->ShowPacket();
+		}
+		else if (type == PacketType::Test)
+		{
+			Test* test = reinterpret_cast<Test*>(data);
+			test->ShowPacket();
+		}
+	}
 
 	if (_recvBuffer.OnRead(bytesTransferred) == false)
 	{

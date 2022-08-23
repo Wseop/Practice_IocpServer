@@ -4,7 +4,9 @@
 #include "IocpCore.h"
 #include "IocpObject.h"
 #include "SendBuffer.h"
-#include "TestPacket.h"
+#include "PacketManager.h"
+#include "PacketHeader.h"
+#include "PacketBody.h"
 #include <vector>
 
 using namespace std;
@@ -39,16 +41,35 @@ int main(void)
 		{
 			while (true)
 			{
-				TestPacket packet(a, a + 1, a + 2);
-				a++;
-
-				for (shared_ptr<Session> session : sessions)
+				if (a & 1)
 				{
-					SendBuffer* sendBuffer = new SendBuffer(reinterpret_cast<BYTE*>(&packet), sizeof(TestPacket));
-					session->StartSend(sendBuffer);
+					// Info Packet
+					Info packet(a, a + 1, a + 2);
+
+					BYTE* packetPtr = PacketManager::CreatePacket(PacketType::Info, reinterpret_cast<BYTE*>(&packet), packet.GetSize());
+
+					for (shared_ptr<Session> session : sessions)
+					{
+						SendBuffer* sendBuffer = new SendBuffer(packetPtr, sizeof(PacketHeader) + packet.GetSize());
+						session->StartSend(sendBuffer);
+					}
+				}
+				else
+				{
+					// Test Packet
+					Test packet(a, a + 1, a + 2, L"This is test packet");
+
+					BYTE* packetPtr = PacketManager::CreatePacket(PacketType::Test, reinterpret_cast<BYTE*>(&packet), packet.GetSize());
+
+					for (shared_ptr<Session> session : sessions)
+					{
+						SendBuffer* sendBuffer = new SendBuffer(packetPtr, sizeof(PacketHeader) + packet.GetSize());
+						session->StartSend(sendBuffer);
+					}
 				}
 
-				this_thread::sleep_for(3s);
+				a++;
+				this_thread::sleep_for(1s);
 			}
 		});
 

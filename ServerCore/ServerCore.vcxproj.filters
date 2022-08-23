@@ -42,7 +42,13 @@
     <ClCompile Include="RecvBuffer.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="TestPacket.cpp">
+    <ClCompile Include="PacketManager.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketHeader.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketBody.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,7 +83,13 @@
     <ClInclude Include="RecvBuffer.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="TestPacket.h">
+    <ClInclude Include="PacketManager.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketHeader.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketBody.h">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
