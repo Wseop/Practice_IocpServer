@@ -53,6 +53,7 @@ int main(void)
 						SendBuffer* sendBuffer = new SendBuffer(packetPtr, sizeof(PacketHeader) + packet.GetSize());
 						session->StartSend(sendBuffer);
 					}
+					delete packetPtr;
 				}
 				else
 				{
@@ -66,10 +67,11 @@ int main(void)
 						SendBuffer* sendBuffer = new SendBuffer(packetPtr, sizeof(PacketHeader) + packet.GetSize());
 						session->StartSend(sendBuffer);
 					}
+					delete packetPtr;
 				}
 
 				a++;
-				this_thread::sleep_for(1s);
+				this_thread::sleep_for(10ms);
 			}
 		});
 
